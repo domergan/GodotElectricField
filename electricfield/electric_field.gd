@@ -3,13 +3,13 @@ extends Node2D
 @onready var charge1 = $"../PositiveCharge1"
 @onready var charge2 = $"../PositiveCharge2"
 
-@export var line_color 			 = Color(1, 1, 0) 
-@export var line_width 			 = 2.0
+@export var line_color = Color(1, 1, 0) 
+@export var line_width = 2.0
 @export var num_lines_per_charge = 16
-@export var max_line_length 	 = 500
-@export var step_size 			 = 5.0
+@export var max_line_length = 500
+@export var step_size = 5.0
 	
-func _ready() -> void:
+func _process(delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
@@ -56,6 +56,3 @@ func calculate_electric_field(point):
 
 	return e1 + e2
 	
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass

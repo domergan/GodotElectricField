@@ -20,24 +20,7 @@ script = ExtResource("2_qx3ce")
 
 [node name="ElectricField" type="Node2D" parent="."]
 script = ExtResource("3_qx3ce")
-line_color = Color(0.770101, 0.537809, 0.211412, 1)
-line_width = 1.5
+line_width = 1.0
 num_lines_per_charge = 32
 max_line_length = 1500
-step_size = 2.0
-
-[node name="HSlider_Charge1" type="HSlider" parent="."]
-offset_left = 29.0
-offset_top = 17.0
-offset_right = 246.0
-offset_bottom = 33.0
-min_value = -20.0
-max_value = 20.0
-
-[node name="HSlider_Charge2" type="HSlider" parent="."]
-offset_left = 29.0
-offset_top = 43.0
-offset_right = 246.0
-offset_bottom = 59.0
-min_value = -20.0
-max_value = 20.0
+step_size = 3.0

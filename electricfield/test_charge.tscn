@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://dw21eda0rbx2x"]
+
+[ext_resource type="Texture2D" uid="uid://bpiu8f52st6a1" path="res://icon.svg" id="1_cf77x"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_cf77x"]
+
+[node name="TestCharge" type="RigidBody2D"]
+mass = 0.001
+gravity_scale = 0.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(-1.5, 0.5)
+scale = Vector2(0.226562, 0.210938)
+texture = ExtResource("1_cf77x")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_cf77x")

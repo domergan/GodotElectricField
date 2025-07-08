@@ -17,14 +17,51 @@ extends Node2D
 @export var negative_charge_color : Color = Color.BLUE
 @export var positive_charge_color : Color = Color.RED
 
+@export_group("Test Charge Properties")
+@export var test_charge_scene : PackedScene = preload("res://test_charge.tscn")
+@export var q_test : float = 1.0
+
 # --- Charge Values ---
 var q1: float = 1.0
 var q2: float = 1.0
 
+var test_charges : Array[RigidBody2D] = []
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_echo():
+		return
+	if event is InputEventMouseButton and event.is_pressed():
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			spawn_test_charge(get_global_mouse_position())
+
+func spawn_test_charge(spawn_global_position):
+	var instance = test_charge_scene.instantiate()
+	instance.global_position = spawn_global_position
+	add_child(instance)
+		
+	test_charges.append(instance)
+
+func _physics_process(delta: float) -> void:
+	apply_electric_force()
+	
+func apply_electric_force():
+	for charge in test_charges.duplicate():
+		if not is_instance_valid(charge):
+			test_charges.erase(charge)
+			continue
+		if not (charge is RigidBody2D):
+			continue
+		
+		var q_test : float = 1.0
+		var e_field := calculate_electric_field(charge.global_position)
+		var force := e_field * q_test # F = q * E
+		
+		charge.apply_central_force(force)
+	
 # Runs every frame
 func _process(delta: float) -> void:
 	queue_redraw()
-
+	
 # The main drawing function, completely replaced with the new grid logic
 func _draw() -> void:
 	# Update the colors of the charge sprites themselves

@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://b15fdj38augl6" path="res://drag.gd" id="2_qx3ce"]
 [ext_resource type="Script" uid="uid://dgdrwfi6abxea" path="res://electric_field.gd" id="3_qx3ce"]
 
-[node name="Node2D" type="Node2D"]
+[node name="Main" type="Node2D"]
 
 [node name="PositiveCharge1" type="Sprite2D" parent="."]
 position = Vector2(409, 503)

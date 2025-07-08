@@ -1,58 +1,106 @@
 extends Node2D
 
-@onready var charge1 = $"../PositiveCharge1"
-@onready var charge2 = $"../PositiveCharge2"
+# --- Node References ---
+@onready var charge1_node = $"../PositiveCharge1"
+@onready var charge2_node = $"../PositiveCharge2"
 
-@export var line_color = Color(1, 1, 0) 
-@export var line_width = 2.0
-@export var num_lines_per_charge = 16
-@export var max_line_length = 500
-@export var step_size = 5.0
-	
+# --- Inspector Variables for Customization ---
+@export_group("Field Visualization")
+@export var grid_spacing: int = 40  # The distance between arrows on the grid
+@export var arrow_scale: float = 100 # A multiplier to control the arrow length
+@export var max_arrow_length: float = 25.0 # The maximum visual length of an arrow
+@export var dim_color : Color = Color(0.4, 0.4, 0.2) # Color for weak fields
+@export var bright_color : Color = Color.YELLOW       # Color for strong fields
+@export var line_width: float = 2.5
+
+@export_group("Charge Properties")
+@export var negative_charge_color : Color = Color.BLUE
+@export var positive_charge_color : Color = Color.RED
+
+# --- Charge Values ---
+var q1: float = 1.0
+var q2: float = 1.0
+
+# Runs every frame
 func _process(delta: float) -> void:
 	queue_redraw()
 
+# The main drawing function, completely replaced with the new grid logic
 func _draw() -> void:
-	draw_field_lines_for_charge(charge1.position, num_lines_per_charge, max_line_length, step_size, line_color, line_width)
-	draw_field_lines_for_charge(charge2.position, num_lines_per_charge, max_line_length, step_size, line_color, line_width)
+	# Update the colors of the charge sprites themselves
+	charge1_node.self_modulate = positive_charge_color if q1 > 0 else negative_charge_color
+	charge2_node.self_modulate = positive_charge_color if q2 > 0 else negative_charge_color
+	
+	# Get the visible area of the screen
+	var viewport_rect = get_viewport_rect()
 
-func draw_field_lines_for_charge(charge_pos, num_lines, max_length, step, color, width):
-	for i in range(num_lines):
-		var angle = 2 * PI * i / num_lines
-		var current_pos = charge_pos + Vector2(cos(angle), sin(angle)) * 20
+	# Loop through every point on our virtual grid
+	for x in range(0, int(viewport_rect.size.x), grid_spacing):
+		for y in range(0, int(viewport_rect.size.y), grid_spacing):
+			var point = Vector2(x, y)
+			
+			# Calculate the electric field at this grid point
+			var field_vector = calculate_electric_field(point)
+			
+			# Draw an arrow representing this vector
+			draw_field_arrow(point, field_vector)
 
-		for _j in range(int(max_length / step)):
-			var electric_field = calculate_electric_field(current_pos)
-			var direction = electric_field.normalized()
-			var next_pos = current_pos + direction * step
+# Helper function to draw a single arrow representing the field vector
+func draw_field_arrow(pos: Vector2, vector: Vector2):
+	# If the field is zero (e.g., inside a charge), don't draw anything
+	if vector.is_zero_approx():
+		return
 
-			# Draw a small segment of the line
-			draw_line(current_pos, next_pos, color, width)
+	var magnitude = vector.length()
+	var direction = vector.normalized()
 
-			current_pos = next_pos
+	# Determine color based on field strength (magnitude)
+	# We use log to better visualize the 1/r^2 falloff
+	var strength_ratio = clamp(log(magnitude) / 8.0, 0.0, 1.0)
+	var arrow_color = dim_color.lerp(bright_color, strength_ratio)
 
-func calculate_electric_field(point):
-	var k = 1.0
+	# Determine the arrow's length based on magnitude, but cap it
+	var arrow_length = min(magnitude * arrow_scale, max_arrow_length)
+	
+	# Calculate the start and end points of the arrow's main line
+	# We center the arrow on the grid point for a cleaner look
+	var start_pos = pos - direction * arrow_length / 2.0
+	var end_pos = pos + direction * arrow_length / 2.0
+	
+	# Draw the arrow's body
+	draw_line(start_pos, end_pos, arrow_color, line_width)
 
-	# Positions of the charges
-	var pos1 = charge1.position
-	var pos2 = charge2.position
+	# Draw the arrowhead
+	var head_length = 10.0
+	var head_angle = PI / 6 # 30 degrees
+	var head_p1 = end_pos - direction.rotated(head_angle) * head_length
+	var head_p2 = end_pos - direction.rotated(-head_angle) * head_length
+	draw_line(end_pos, head_p1, arrow_color, line_width)
+	draw_line(end_pos, head_p2, arrow_color, line_width)
 
-	var q1 = 5.0
-	var q2 = 1.0
 
-	var r1 = point - pos1
-	var r2 = point - pos2
+# This function remains the same, it's the core of the physics simulation
+func calculate_electric_field(point: Vector2) -> Vector2:
+	var k = 10000.0 # Constant needs to be larger for this type of visualization
+
+	var r1 = point - charge1_node.position
+	var r2 = point - charge2_node.position
 
 	var dist_sq1 = r1.length_squared()
 	var dist_sq2 = r2.length_squared()
 
-	# Avoid dividing by zero
-	if dist_sq1 == 0 or dist_sq2 == 0:
+	# Avoid calculation if we are too close to a charge
+	if dist_sq1 < 200 or dist_sq2 < 200:
 		return Vector2.ZERO
 
 	var e1 = (k * q1 / dist_sq1) * r1.normalized()
 	var e2 = (k * q2 / dist_sq2) * r2.normalized()
-
-	return e1 + e2
 	
+	return e1 + e2
+
+# --- Signal Handlers ---
+func _on_h_slider_charge_1_value_changed(value: float) -> void:
+	q1 = value
+
+func _on_h_slider_charge_2_value_changed(value: float) -> void:
+	q2 = value
